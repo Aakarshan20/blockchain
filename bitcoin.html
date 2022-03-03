@@ -1,0 +1,99 @@
+
+
+<head>
+    <meta charset="utf-8" />
+    <script src="sha1.js"></script>
+    <title>主畫面</title>
+
+	<script>
+		class Block{
+			index = 0
+			timestamp = new Date().getTime()
+			preHash = '' // 上一個區塊的哈希
+			hash = '' // 自身的哈希
+			nonce = 0 // 計算哈希用的隨機數因子
+			
+			// 整體區塊的全部信息連接起來 用於計算哈希
+			get key(){
+				return this.index + this.timestamp + this.preHash + this.nonce
+			}
+		}
+		
+		class Blockchain {
+			blocks = [] //默認區塊鏈是空的
+			
+			// 初始化 傳入創世區塊
+			constructor(genesis){
+				this.mining(genesis)
+			}
+		
+			// 挖礦 (驗證區塊有效性)
+			mining(block){
+				
+				// 如果區塊鏈是空的 說明需要加入創世區塊
+				if(this.blocks.length == 0){
+					block.preHash = '0'
+					block.hash = this.hashing(block)
+				} else {
+					// 取區塊鏈中最後一個區塊的哈希
+					block.preHash = this.blocks[this.blocks.length -1 ].hash
+					
+					// 紀錄區塊的序號 (區塊高度)
+					block.index = this.blocks.length
+					
+					// 計算區塊校驗
+					block.hash = this.hashing(block)
+				}
+				
+				this.blocks.push(block) // 加入區塊鏈中
+				
+				document.getElementById("block").innerHTML = JSON.stringify(block)
+			}
+			
+			// 哈希計算
+			
+			hashing(block){
+				let hash = ""
+				
+				// 區塊有效性的規則(即區塊難度 比如前幾位是0)
+				while(!hash.startsWith("00")){
+					// 如果不符合 則隨機數遞增
+					block.nonce +=1
+					
+					// 直到計算出符合的為止, nonce的最終值就是計算的次數
+					hash = sha1(block.key)
+				}
+				return hash;
+			}
+		}
+		</script>
+		<script>
+			function startMining(){
+				let times = document.getElementById("myInput").value
+				miningBitCoin(times)
+				
+			}
+			
+			function miningBitCoin(times){
+				let genesis = new Block()
+				let bitcoinChain = new Blockchain(genesis)
+				
+				for(let i = 1; i < times; i++){
+					let newBlock = new Block()
+					bitcoinChain.mining(newBlock)
+				}
+				
+				document.getElementById("blocks").innerHTML = JSON.stringify(bitcoinChain.blocks)
+			}
+		</script>
+	</head>
+	
+	<body>
+		<p><input type="text" placeholder = "請輸入區塊高度" id="myInput">
+			<button id = "btn1" onclick="startMining()">開挖</button>
+		</p>
+		最新的區塊 <p id="block" style="font-size:80% "></p><br>
+		
+		全部區塊: <p id ="blocks" style="font-size:70%"></p>
+			
+	</body>
